@@ -467,6 +467,6 @@ int main(int argc, char const *argv[])
 
 ### Latest update: Jesse 2023_11_08
 
-![image](./img/swing.gif "GanYu Swing~")
+![swing](https://github.com/JesseZ332623/CPP_Interview_Question/assets/101250851/17babd4c-9fa6-4f36-83d4-e2c11ba6d362)
 
 EOF
