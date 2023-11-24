@@ -805,7 +805,7 @@ C++ 的类型转换大致可以分为 4 种，它们分别是：
 
 `const_cast`   const 转换：用于去除 `const` 属性。
 
-`const_cast`   const 转换：用于无关类型之间的转换。
+`reinterpret_cast` 重新解释转换：用于无关类型之间的转换。
 
 ### 隐式类型转换 `Implicit type conversion`
 
