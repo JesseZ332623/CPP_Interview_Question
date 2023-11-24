@@ -3,6 +3,7 @@
 - [C++ 面试题回答（持续更新中）](#c-面试题回答持续更新中)
   - [请简要介绍一下 C++ 的历史及其与 C 语言的关系](#请简要介绍一下-c-的历史及其与-c-语言的关系)
   - [C++ 面向对象编程的三大特性是什么?并举例说明](#c-面向对象编程的三大特性是什么并举例说明)
+  - [那么在 C++ 中多态是怎么实现的，编程实现一下](#那么在-c-中多态是怎么实现的编程实现一下)
   - [什么是类和对象的构造函数及析构函数? 它们的作用是什么?](#c-面向对象编程的三大特性是什么并举例说明)
   - [什么是类和对象的构造函数及析构函数? 它们的作用是什么](#什么是类和对象的构造函数及析构函数-它们的作用是什么)
   - [C++ 模板的作用是什么? 描述其语法形式](#c-模板的作用是什么-描述其语法形式)
@@ -58,6 +59,67 @@ C++ 是一种通用的程序设计语言，和 C 一样，也是诞生于 贝尔
 最后说一下封装：封装就是将一个客观的事物抽象为一个逻辑实体，实体的属性和功能相互结合，形成一个整体。
 并对这个实体设置访问控制，通过外部开放的接口可以访问这个实体，而无需知道内部的具体实现细节。
 C++ 中的结构体和类就很好的使用了封装的特性。
+
+## 那么在 C++ 中多态是怎么实现的，编程实现一下
+
+多态，是指一个类的同名方法，在不同的方法实现不同，说的更专业一点，叫做同一个方法的行为随上下文而异。
+在 C++ 中，多态是使用虚函数的形式实现的，也就是用 `virtual` 关键字去修饰一个类方法，便可以在子类中重写这个方法。
+
+> 代码演示如下：
+
+```C++
+#include <iostream>
+
+/*基类*/
+class Basic
+{
+    private:
+        int _data;
+
+    public:
+        Basic() : _data(0) {}
+        Basic(int _dat) : _data(_dat) {}
+
+        /*内部虚方法，用于展示类数据*/
+        virtual void show() const { printf("%d\n", _data); }
+
+        ~Basic() {}
+};
+
+/*派生类，公共继承自 Basic*/
+class Dirver : public Basic
+{
+    private:
+        int _d_data_1;
+        int _d_data_2;
+
+    public:
+        Dirver() : Basic(), _d_data_1(0), _d_data_2(0) {}
+        Dirver(int _dat, int _d1, int _d2) : Basic(_dat), _d_data_1(_d1), _d_data_2(_d2) {}
+
+        /*重写 show 方法，展示基类和派生类的数据*/
+        virtual void show() const 
+        { 
+            Basic::show();
+            printf("%d\t%d\n", _d_data_1, _d_data_2); 
+        }
+
+        ~Dirver() {}
+};
+
+/*这样，就在 C++ 中实现了一个简单的多态。下面是测试用例：*/
+int main(int argc, char const *argv[])
+{
+    Basic b(12);
+    Dirver d(12, 21, 33);
+
+    b.show();   // 输出 12
+
+    d.show();   // 输出 12 21 33
+
+    return 0;
+}
+```
 
 ## 什么是类和对象的构造函数及析构函数? 它们的作用是什么?
 
@@ -608,6 +670,92 @@ class A
     */
 };
 ```
+
+## 从源代码到可执行程序，中间的过程是什么样的？
+
+从源代码到可执行程序，分为 4 个过程，分别是：`源代码` -> `预处理` -> `编译` -> `汇编` -> `链接` -> `可执行文件`，
+接下来我使用 `GCC` 编译器在 `Linux` 环境上进行演示：
+
+假设我写了几个 .c 源文件，它们是的文件名和互相包含的关系如下表所示：
+
+|源文件     |所包含文件      |
+|----------|------------------|
+|main.c    |`stdio.h` table.h|
+|list.c    |list.h           |
+|symbol.c  |symbol.h         |
+|table.c   |table.h          |
+
+|头文件|所包含文件|
+|--------|-------|
+|table.h |symbol.h list.h|
+
+**注：做标注的为标准库头文件*
+
+文件结构如下图所示：
+
+<img src = "./project/img/project_struct.png" alt = "project_struct"></img>
+
+接下来开始编译他们：
+
+### 预处理
+
+使用 `GCC` 编译器的 `-E` 和 `-o` 选项将所有源文件做预处理（这可以靠编写脚本来执行多条命令）：
+
+```sh
+gcc -E list.c -o list.i
+gcc -E symbol.c -o symbol.i
+gcc -E table.c -o table.i
+gcc -E main.c -o main.i
+```
+
+预处理环节所做的工作如下：
+
+- 展开宏定义和头文件
+- 替换条件编译
+- 删除注释，和多余的空格
+
+### 编译
+
+使用 `GCC` 编译器的 `-S` 和 `-o` 选项将经过预处理的文件进行编译
+
+```sh
+gcc -S list.i -o list.s
+gcc -S symbol.i -o symbol.s
+gcc -S table.i -o table.s
+gcc -S main.i -o main.s
+```
+
+编译环节所作的工作如下：
+
+- 检查代码的语法规范，如果检查到语法问题会报错并停止编译
+- 将预处理文件翻译成汇编代码
+
+**注：编译环节是消耗资源，时间最多的环节*
+
+### 汇编
+
+使用 `GCC` 编译器的 `-c` 和 `-o` 选项汇编 .s 文件
+
+```sh
+gcc -c list.s -o list.o
+gcc -c symbol.s -o symbol.o
+gcc -c table.s -o table.o
+gcc -c main.s -o main.o
+```
+
+汇编环节所做的工作如下：
+
+- 将汇编代码翻译成机器码
+
+### 链接
+
+使用 `GCC` 编译器的 `-o` 选项链接 .o 文件和标准库文件 `excutable_file`，使之形成最后的可执行文件（一般情况下 Linux 的可执行文件是没有后缀的）
+
+```sh
+gcc list.o symbol.o table.o main.o -o excutable_file
+```
+
+这样就完成了从源代码到可执行文件的全过程。所有过程文件可以查看路径 `./project`。
 
 ### Latest update: 2023.11.21
 
