@@ -713,7 +713,7 @@ class A
 
 文件结构如下图所示：
 
-<img src = "./project/img/project_struct.png" alt = "project_struct"></img>
+![project_struct](https://github.com/JesseZ332623/CPP_Interview_Question/assets/101250851/d0509ab9-3aa2-4387-9023-aa1440658fc5)
 
 接下来开始编译他们：
 
