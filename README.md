@@ -800,9 +800,12 @@ C++ 的类型转换大致可以分为 4 种，它们分别是：
 需要用户显式的进行类型转换的操作，主要有：
 
 `static_cast`  静态转换：用于非多态类型的转换，比如 `int` 到 `float` 的转换。
+
 `dynamic_cast` 动态转换：用于多态类型的转换，比如父类到子类。
-`const_cast`   const 转换：用于去除 `const` 属性
-`const_cast`   const 转换：用于无关类型之间的转换
+
+`const_cast`   const 转换：用于去除 `const` 属性。
+
+`const_cast`   const 转换：用于无关类型之间的转换。
 
 ### 隐式类型转换 `Implicit type conversion`
 
