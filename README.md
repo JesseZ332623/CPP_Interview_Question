@@ -1,5 +1,10 @@
 # C++ 面试题回答（持续更新中）
 
+|日期|新增问题|
+|---|---|
+|2023.11.21|1. C++异常处理机制的工作流程是什么 </br> 2. `typedef` 和 `#define` 的区别何在？ </br> 3. union 是什么，有什么用 ? </br> 4. `volatile` 关键字是做什么用的 </br> 5. 一个类中有一个 `int` 类型，一个 `char` 类型和一个虚函数，那它的大小是多少（或者说 `sizeof` 这个类的结果是多少）?|
+|2023.11.24|1. 从源代码到可执行程序，中间的过程是什么样的？</br> 2. C++ 有哪几种类型转换，它们的区别何在?|
+
 - [C++ 面试题回答（持续更新中）](#c-面试题回答持续更新中)
   - [请简要介绍一下 C++ 的历史及其与 C 语言的关系](#请简要介绍一下-c-的历史及其与-c-语言的关系)
   - [C++ 面向对象编程的三大特性是什么?并举例说明](#c-面向对象编程的三大特性是什么并举例说明)
@@ -12,6 +17,8 @@
   - [什么是内联函数? 它与宏的区别是什么?](#什么是内联函数-它与宏的区别是什么)
   - [请简述几种常用的设计模式及其应用场景](#请简述几种常用的设计模式及其应用场景)
     - [单例模式](#单例模式懒汉版饿汉版)
+      - [懒汉版](#懒汉版)
+      - [饿汉版](#饿汉版)
     - [工厂模式（简单工厂模式，抽象工厂模式）](#工厂模式简单工厂模式抽象工厂模式)
     - [观察者模式](#观察者模式)
     - [职责链模式](#职责链模式)
@@ -22,9 +29,19 @@
     - [异常捕获 (try)](#异常捕获-try)
     - [异常处理 (catch)](#异常处理-catch)
   - [`typedef` 和 `#define` 的区别何在？](#typedef-和-define-的区别何在)
-  - [union 是什么，有什么用 ?](#union-是什么有什么用)
+  - [union 是什么，有什么用?](#union-是什么有什么用)
   - [`volatile` 关键字是做什么用的?](#volatile-关键字是做什么用的)
   - [一个类中有一个 `int` 类型，一个 `char` 类型和一个虚函数，那它的大小是多少（或者说 `sizeof` 这个类的结果是多少）?](#一个类中有一个-int-类型一个-char-类型和一个虚函数那它的大小是多少或者说-sizeof-这个类的结果是多少)
+  - [从源代码到可执行程序，中间的过程是什么样的？](#从源代码到可执行程序中间的过程是什么样的)
+    - [预处理](#预处理)
+    - [编译](#编译)
+    - [汇编](#汇编)
+    - [链接](#链接)
+  - [C++ 有哪几种类型转换，它们的区别何在?](#c-有哪几种类型转换它们的区别何在)
+    - [显式类型转换 `Explicit type conversion`](#显式类型转换-explicit-type-conversion)
+    - [隐式类型转换 `Implicit type conversion`](#隐式类型转换-implicit-type-conversion)
+    - [函数样式转换 `Functional Notation`](#函数样式转换-functional-notation)
+    - [旧式 C 风格转换 `C-like conversion`](#旧式-c-风格转换-c-like-conversion)
 
 ## 请简要介绍一下 C++ 的历史及其与 C 语言的关系
 
@@ -339,6 +356,8 @@ class A
 
 单例模式的实现分为 懒汉版 和 饿汉版，代码如下：
 
+#### 懒汉版
+
 ```C++
 /**
 *   懒汉版 （Lazy Singleton）
@@ -371,8 +390,9 @@ Singleton * Singleton::instance = nullptr;
 
 ```
 
-```C++
+### 饿汉版
 
+```C++
 /**
 *   饿汉版 （Eager Singleton）
 *   即单例实例在程序运行时被立即执行初始化
@@ -755,7 +775,65 @@ gcc -c main.s -o main.o
 gcc list.o symbol.o table.o main.o -o excutable_file
 ```
 
-这样就完成了从源代码到可执行文件的全过程。所有过程文件可以查看路径 `./project`。
+这样就完成了从源代码到可执行文件的全过程。（所有过程文件可以查看路径 `./project`）
+
+## C++ 有哪几种类型转换，它们的区别何在？
+
+C++ 的类型转换大致可以分为 4 种，它们分别是：
+
+- 显式类型转换 `Explicit type conversion`
+- 隐式类型转换 `Implicit type conversion`
+- 函数样式转换 `Functional Notation`
+- 旧式 C 风格转换 `C-like conversion`
+
+而显示类型转换 `Explicit type conversion` 又可以细分为以下 4 种：
+
+- `static_cast`  静态转换
+- `dynamic_cast` 动态转换
+- `const_cast`   const 转换  
+- `reinterpret_cast` 重新解释转换
+
+接下来我将详细的讲解这些转换：
+
+### 显式类型转换 `Explicit type conversion`
+
+需要用户显式的进行类型转换的操作，主要有：
+
+`static_cast`  静态转换：用于非多态类型的转换，比如 `int` 到 `float` 的转换。
+`dynamic_cast` 动态转换：用于多态类型的转换，比如父类到子类。
+`const_cast`   const 转换：用于去除 `const` 属性
+`const_cast`   const 转换：用于无关类型之间的转换
+
+### 隐式类型转换 `Implicit type conversion`
+
+C++ 自动执行的转换，无需用户操作，比如将 `int` 转换成 `long long int`。（也就是 `lower intenger` 到 `heigher intenger`）
+
+### 函数样式转换 `Functional Notation`
+
+通过构造函数进行类型转换，例如下面的代码：
+
+```C++
+std::string _str = "This is a string....";
+```
+
+显然 `"This is a string...."` 是 C 风格字符串 (`const char *` 类型)，
+它会和 `std::string` 中的 `basic_string &operator=(const _CharT *__s)` 构造函数匹配，然后成为这个构造函数的参数，最后构造这个类。
+
+### 旧式 C 风格转换 `C-like conversion`
+
+即 C 语言风格的类型转换，例如下面的代码：
+
+```C++
+int number = 21;
+
+/*将 整数 number 强行显示的转换成 long double 类型*/
+long double _value = (long double)number + 0.145134;
+
+std::cout << _value << std::endl;
+```
+
+当然，这种风格会造成很多不安全，不可预料的情况，
+因此在 C++ 中不推荐使用这种旧式风格的转换，而、但更鼓励用户使用 C++ 显式类型转换。
 
 ### Latest update: 2023.11.21
 
