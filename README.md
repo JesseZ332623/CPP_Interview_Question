@@ -769,7 +769,7 @@ gcc -c main.s -o main.o
 
 ### 链接
 
-使用 `GCC` 编译器的 `-o` 选项链接 .o 文件和标准库文件 `excutable_file`，使之形成最后的可执行文件（一般情况下 Linux 的可执行文件是没有后缀的）
+使用 `GCC` 编译器的 `-o` 选项链接 .o 文件和标准库文件，使之形成最后的可执行文件 `excutable_file`（一般情况下 Linux 的可执行文件是没有后缀的）
 
 ```sh
 gcc list.o symbol.o table.o main.o -o excutable_file
