@@ -1025,6 +1025,8 @@ int main(int argc, char const *argv[])
 }
 ```
 
+所有源代码以及可执行文件请参考路径 `.\smart_pointer\`
+
 ## `typedef` 和 `#define` 的区别何在？
 
 ||`typedef` 和 `#define` 的区别|
