@@ -1290,7 +1290,7 @@ std::cout << _value << std::endl;
 当然，这种风格会造成很多不安全，不可预料的情况，
 因此在 C++ 中不推荐使用这种旧式风格的转换，但更鼓励用户使用 C++ 显式类型转换。
 
-### Latest update: 2023.11.21
+### Latest update: 2023.11.26
 
 #### Author: [JesseZ332623](https://github.com/JesseZ332623)
 
