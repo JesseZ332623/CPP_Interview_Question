@@ -4,12 +4,13 @@
 |---|---|
 |2023.11.21|1. C++异常处理机制的工作流程是什么 </br> 2. `typedef` 和 `#define` 的区别何在？ </br> 3. union 是什么，有什么用 ? </br> 4. `volatile` 关键字是做什么用的 </br> 5. 一个类中有一个 `int` 类型，一个 `char` 类型和一个虚函数，那它的大小是多少（或者说 `sizeof` 这个类的结果是多少）?|
 |2023.11.24|1. 从源代码到可执行程序，中间的过程是什么样的？</br> 2. C++ 有哪几种类型转换，它们的区别何在?|
+|2023.11.26|1.在 C++ 中，类构造函数能不能抛出异常呢？析构函数呢？</br> 2. 你刚才在回答中提到了智能指针，也不妨详细的展开来讲讲|
 
 - [C++ 面试题回答（持续更新中）](#c-面试题回答持续更新中)
   - [请简要介绍一下 C++ 的历史及其与 C 语言的关系](#请简要介绍一下-c-的历史及其与-c-语言的关系)
   - [C++ 面向对象编程的三大特性是什么?并举例说明](#c-面向对象编程的三大特性是什么并举例说明)
   - [那么在 C++ 中多态是怎么实现的，编程实现一下](#那么在-c-中多态是怎么实现的编程实现一下)
-  - [什么是类和对象的构造函数及析构函数? 它们的作用是什么?](#c-面向对象编程的三大特性是什么并举例说明)
+  - [面向对象编程的三大特性是什么? 并举例说明](#c-面向对象编程的三大特性是什么并举例说明)
   - [什么是类和对象的构造函数及析构函数? 它们的作用是什么](#什么是类和对象的构造函数及析构函数-它们的作用是什么)
   - [C++ 模板的作用是什么? 描述其语法形式](#c-模板的作用是什么-描述其语法形式)
   - [什么是 `STL` ? 讲述你熟悉的几种 `STL` 容器](#什么是-stl-讲述你熟悉的几种stl容器)
@@ -28,6 +29,19 @@
     - [异常抛出 (throw)](#异常抛出-throw)
     - [异常捕获 (try)](#异常捕获-try)
     - [异常处理 (catch)](#异常处理-catch)
+  - [不错，对 C++ 的异常还算了解，那么在 C++ 中，类构造函数能不能抛出异常呢？析构函数呢？](#不错对-c-的异常还算了解那么在-c-中类构造函数能不能抛出异常呢析构函数呢)
+    - [构造函数抛出异常所带来的影响与正确的处理方式](#构造函数抛出异常所带来的影响与正确的处理方式)
+    - [析构函数抛出异常所带来的影响与正确的处理方式](#析构函数抛出异常所带来的影响与正确的处理方式)
+  - [嗯，不错的回答，你刚才在回答中提到了智能指针，也不妨详细的展开来讲讲](#嗯不错的回答你刚才在回答中提到了智能指针也不妨详细的展开来讲讲)
+    - [`C++98` 引入](#c98-引入)
+      - [`auto_ptr`](#auto_ptr)
+    - [`C++11` 引入](#c11-引入)
+      - [`unique_ptr`](#unique_ptr)
+      - [`shared_ptr`](#shared_ptr)
+      - [`weak_ptr`](#weak_ptr)
+        - [避免 `shared_ptr` 的循环引用](#避免-shared_ptr-的循环引用)
+        - [判断 `shared_ptr` 的实例是否失效](#判断-shared_ptr-的实例是否失效)
+        - [在不延长作用域的情况下（续命）访问 `shared_ptr` 所指向的那片内存的数据](#在不延长作用域的情况下续命访问-shared_ptr-所指向的那片内存的数据)
   - [`typedef` 和 `#define` 的区别何在？](#typedef-和-define-的区别何在)
   - [union 是什么，有什么用?](#union-是什么有什么用)
   - [`volatile` 关键字是做什么用的?](#volatile-关键字是做什么用的)
@@ -570,6 +584,444 @@ int main(int argc, char const *argv[])
     }
 
     return 0;
+}
+```
+
+## 不错，对 C++ 的异常还算了解，那么在 C++ 中，类构造函数能不能抛出异常呢？析构函数呢？
+
+从理论上讲 构造函数和析构函数都能够抛出异常，但这会导致程序发生未定义行为，在实际工作中是应该要避免的，接下来我将分别说明两者：
+
+### 构造函数抛出异常所带来的影响与正确的处理方式
+
+- 意味着对象创建失败了，但此时系统已经为这个对象分配的资源，这会造成浪费。
+- 无法调用析构函数，因为抛出异常后，对象没有被真正的创建，也就无法调用相应的析构函数，这可能会导致内存泄漏。
+- 若在栈上创建了一个对象，然后这个对象的析构函数抛出异常被外部捕获，这会导致该对象处于未定义的状态。
+
+所以可以使用下面的几种方法处理构建函数的异常：
+
+- 使用错误码，并设置公共接口 `is_valid()` 来检查这个对象是否被成功创建，示例代码如下：
+
+```C++
+class A
+{
+    public:
+        /*一个匿名的枚举类型，用于表示对象的状态*/
+        enum { _ERROR_ = 0, _READY_ = 1 };
+    
+    private:
+        int *_data;
+        bool _state;
+
+    public:
+        /*在构建函数中使用 new 在堆中申请内存，如果申请失败，就将状态码赋值给 _state*/
+        A() : _data(new int[12]) { (!_data) ? _state = _ERROR_ : _state = _READY_; }
+        A(size_t _size) : _data(new int[_size]) { (!_data) ? _state = _ERROR_ : _state = _READY_; }
+
+        /*公共接口 is_valid 用于判断该类是否可用*/
+        bool is_valid() { return _state == _READY_; }
+
+        ~A();
+};
+
+/*测试用例*/
+int main(int argc, char const *argv[])
+{
+    A _a;
+    if (_a.is_valid()) { sprintf(stderr, "Create This Object Failed....\n"); }
+}
+```
+
+- 使用智能指针(C++11) 中的 `unique_ptr`，来处理构建函数的异常，示例代码如下：
+
+```C++
+int main(int argc, char const *argv[])
+{
+    /*使用智能指针创建这个类，如果创建失败，就会返回 nullptr，也能做到和错误码类似的效果，并且更通用，安全。*/
+    std::unique_ptr<A> _a(new A(100));
+
+    if (!_a) { sprintf(stderr, "Create This Object Failed....\n"); }
+}
+```
+
+### 析构函数抛出异常所带来的影响与正确的处理方式
+
+若析构函数抛出异常，程序会自动调用 `std::terminate` 来强制终止程序，用户连出错的地方在哪都不知道。。。
+
+因此，可以这样处理析构函数的异常：
+
+- 还是上面的那个类 `A`，它的析构函数实现如下：
+
+```C++
+A::~A()
+{
+    /*在 try 块中 detele 堆内存*/
+    try
+    {
+        delete[] _data;
+    }
+    catch(const std::exception _except)     /*若出现异常，则跳转到 catch 块，进行报错并处理*/
+    {
+        /*试图使用 free 去释放，如果再不成功，只能认命，这片内存泄漏了*/
+        free(_data);
+        /*防止悬空指针*/
+        _data = nullptr;
+
+        /*报错，至少在调试的时候知道出现泄漏的情况*/
+        fprintf(stderr, "delete _data failed: %s\n", _except.what());
+    }
+}
+```
+
+这样就成功抛出了异常，还解决了可能出现的未定义行为。
+
+## 嗯，不错的回答，你刚才在回答中提到了智能指针，也不妨详细的展开来讲讲
+
+智能指针是从 `C++98` ~ `C++11` 时期提出并发展的，拥有和指针相似行为的模板类，它们都声明在 `<memory>` 头文件中，且分为以下四种：
+
+### `C++98` 引入
+
+#### `auto_ptr`
+
+实现了对象独占所有权的语义（有且仅有这一个智能指针来管理这片内存），但是 `auto_ptr` 也有很多问题，
+比如不支持赋值语义，在转移所有权后原指针就失效了，如果原来的 `auto_ptr` 作用域还没到头，强行调用那个智能指针会引发异常。
+因此该智能指针在 `C++11` 版本就被 `unique_ptr` 取代。
+`auto_ptr` 代码示例：
+
+```C++
+#include <memory>
+#include <iostream>
+#include <cstdlib>
+#include <string>
+/**
+ * 使用 auto_ptr 的示例
+*/
+
+/*一个很简单的 Report 类*/
+class Report
+{
+    private:
+        std::string _str;
+    
+    public:
+        /*构建函数*/
+        Report(const std::string & _s) : _str(_s) { printf("Object Created.\n"); }
+
+        /*输出 _str 的内容*/
+        void commit() const { printf("%s\n", _str.c_str()); }
+
+        /*析构函数*/
+        ~Report() { printf("Object Destoryed.\n"); }
+};
+
+int main(int argc, char const *argv[])
+{
+    {
+        /*在块中声明 auto_ptr 类对象 _report_ptr_1 并使用 new 关键字构建*/
+        std::auto_ptr<Report> _report_ptr_1(new Report("Fuck You!"));
+        /*使用 -> 符号可以调用这个类的成员方法*/
+        _report_ptr_1->commit();
+
+        /*作用域到头，自动销毁 _report_ptr_1*/
+    }
+
+    /*声明 auto_ptr 类对象 _report_ptr_2 并使用 new 关键字构建*/
+    std::auto_ptr<Report> _report_ptr_2(new Report("Fuck You Too!"));
+    _report_ptr_2->commit();
+
+    /*
+        auto_ptr 的缺陷，不支持赋值语句，将 _report_ptr_2 的所有权转移给 _report_ptr_3 之后，
+        _report_ptr_2 就失效了。
+    */
+    std::auto_ptr<Report> _report_ptr_3 = _report_ptr_2;
+
+    //_report_ptr_2->commit();      _report_ptr_2 已经失效，强行调用会异常
+    _report_ptr_3->commit();
+
+
+    /*作用域到头，自动销毁 _report_ptr_2 _report_ptr_3*/
+    return EXIT_SUCCESS;
+}
+
+```
+
+### `C++11` 引入
+
+#### `unique_ptr`
+
+`unique` 翻译过来就是唯一的，独一无二的。显然，它是来取代 `auto_ptr` 的。
+`unique_ptr` 改进了 `auto_ptr` 的缺点，在进行赋值操作时，会在编译时报错（虽然还是报错，但也比运行阶段报错要好），
+此外，`unique_ptr` 还有一个数组的变体，创建类的时候可以直接使用 `type[]` 的语法，然后也可以直接使用 `[]` 符号直接访问对象。
+如下面的代码所示：
+
+```C++
+std::unique_ptr<int[]> _array(new int[10]);
+
+/*
+    不允许，会在编译时报错
+    error: use of deleted function
+*/
+//std::unique_ptr<int[]> _array_2 = _array;
+
+for (int index = 0; index < 10; ++index)
+{
+    _array[index] = std::rand() % 100 + 1;
+    std::cout << _array[index] << '\t';
+}
+```
+
+当然，也有一些特殊情况，如下面的代码：
+
+```C++
+std::unique_ptr<std::string> function(const char * _str);
+
+std::unique_ptr<std::string> function(const char * _str)
+{
+    /*一个临时的智能指针 _temp_ptr*/
+    std::unique_ptr<std::string> _temp_ptr(new std::string(_str));
+
+    /*在临死前返回*/
+    return _temp_ptr;
+}
+
+/*
+    由于函数内的中间智能指针作用域到期销毁，
+    _ptr 接管了这个返回的 unique_ptr 对象，这并不会引发什么问题。
+*/
+std::unique_ptr<std::string> _ptr = function("This is a test string.");
+
+std::cout << *_ptr << std::endl;    // 输出 This is a test string.
+```
+
+#### `shared_ptr`
+
+也可以叫分享指针，同样也是为了解决 `auto_ptr` 的问题而生，但是和前两者独占对象所有权的方式不同，
+`shared_ptr` 引入了计数器 `counter` 的概念，可以让多个分享指针同时指向同一片内存，直到所有指向这片内存的分享指针作用域到期，才会调用 `delete` 销毁这片内存。
+写段代码演示一下：
+
+```C++
+#include <memory>
+#include <iostream>
+#include <string>
+
+int main(int argc, char const *argv[])
+{
+    using std::cout;
+
+    /*声明一个 std::string 类型的 shared_ptr并构造 counter = 1*/
+    std::shared_ptr<std::string> _str_1(new std::string("This is a string."));
+    
+    /*shared_ptr 重载了 (*) 解引用运算符，直接使用 *_str_1 就能取出 string 对象*/
+    cout << *_str_1 << '\n';
+
+    {
+        /*声明一个 std::string 类型的 shared_ptr 并指向 _str_1，counter = 2*/
+        std::shared_ptr<std::string> _str_2 = _str_1;
+        cout << *_str_2 << '\n';
+
+        /*声明一个 std::string 类型的 shared_ptr 并指向 _str_1，counter = 3*/
+        std::shared_ptr<std::string> _str_3 = _str_1;
+        cout << *_str_2 << '\n';
+
+        /*_str_2 和 _str_3 的作用域到期，销毁，counter = 1*/
+    }
+
+    /*声明一个 std::string 类型的 shared_ptr 并指向 _str_1，counter = 2*/
+    std::shared_ptr<std::string> _str_4 = _str_1;
+    cout << *_str_4 << '\n';
+
+    /*
+        作用域到头，销毁 _str_1 和 _str_4，counter = 0，
+        已经没有 shared_ptr 指向那片内存了，所以调用 delete 销毁构造的 std::string
+    */
+    return EXIT_SUCCESS;
+}  
+```
+
+#### `weak_ptr`
+
+也可以叫弱指针，和前面三者不同，弱指针是辅助 `shared_ptr` 来进行内存管理的。通常有下面 3 种用法：
+
+##### 避免 `shared_ptr` 的循环引用
+
+首先解释一下何为循环引用，比如下面的代码演示了一个经典的循环引用：
+
+```C++
+#include <memory>
+#include <iostream>
+#include <string>
+
+/*
+    模板节点，内有：
+    一个 shared_ptr，用于保存下一个节点的地址。
+    数据 data，节点的数据。
+*/
+template <typename _type>
+struct Node
+{
+    std::shared_ptr<Node<_type>> next;
+    _type data;
+
+    Node() : next(nullptr), data(0) {}
+    Node(_type _dat) : next(new Node<_type>()), data(_dat) {}
+};
+
+int main(int argc, char const *argv[])
+{
+    /*声明 Node<int> 类型的 shared_ptr _a*/
+    std::shared_ptr<Node<int>> _a(new Node<int>(12));
+
+    /*声明 Node<int> 类型的 shared_ptr _b*/
+    std::shared_ptr<Node<int>> _b(new Node<int>(21));
+
+    /*_a 持有 _b*/
+    _a->next = _b;
+
+    /*_b 持有 _a*/
+    _b->next = _a;
+
+    /*
+        虽然，最后可以成功输出 12 21，但是 _a 和 _b 陷入了循环引用，counter 永远不为 0，
+        也就不会释放 _a 和 _b 所指向的内存，造成内存泄漏。（该程序至少泄漏了 2 个 Node<int> 实例的内存）
+    */
+    printf("%d\t%d\n", _a->data, _b->data);
+
+    return EXIT_SUCCESS;
+}
+
+```
+
+为了解决这个问题，就可以在结构体中使用 `weak_ptr` 来避免，解决方法如下：
+
+```C++
+#include <memory>
+#include <iostream>
+
+/*
+    模板节点，内有：
+
+    一个 shared_ptr，用于保存下一个节点的地址。
+    一个 week_ptr，用于避免 shared_ptr 的循环引用
+    数据 data，节点的数据。
+*/
+template <typename _type>
+struct Node
+{
+    std::shared_ptr<Node<_type>> next;
+    std::weak_ptr<Node<_type>> other;
+
+    _type data;
+
+    Node() : next(nullptr), other(next), data(0) {}
+    Node(_type _dat) : next(nullptr), other(next), data(_dat) {}
+};
+
+int main(int argc, char const *argv[])
+{
+    std::shared_ptr<Node<double>> _a(new Node<double>(550.341));
+    std::shared_ptr<Node<double>> _b = std::make_shared<Node<double>>(12.3452);
+
+    _a->next = _b;
+
+    /*使用 weak_ptr 避免循环引用*/
+    _b->other = _a;
+
+    /*正常的取数据*/
+    printf("%lf\t%lf\n", _a->data, _a->next->data);
+
+    /*
+        _b->other.lock() 取到  weak_ptr other 保存的 shared_ptr _a 的地址。
+        如果 _a 不存在或使用默认构造初始化，就会返回 nullptr，使用三元运算符判断即可。
+    */    
+    printf("%lf\t%lf\n", _b->data, (_b->other.lock()) ? _b->other.lock()->data : -1);
+
+    return EXIT_SUCCESS;
+}
+
+```
+
+这样就很好的解决了循环引用的问题，既成功运行了程序，也避免了内存泄漏。
+
+##### 判断 `shared_ptr` 的实例是否失效
+
+可以使用 `weak_ptr` 中的 `expired()` 成员方法判断指向的 `shared_ptr` 是否有效。
+如下面的代码所示：
+
+``` C++
+#include <memory>
+#include <iostream>
+
+int main(int argc, char const *argv[])
+{
+    std::shared_ptr<int> _array_1(new int(21));
+
+    /*一个指向 shared_ptr<int> _array_1 的 weak_ptr<int> _weak_a1*/
+    std::weak_ptr<int> _weak_a1(_array_1);
+
+    /*为了手动控制作用域，只能把智能指针的实例也放在堆上面（笑哭）*/
+    std::shared_ptr<int> *_array_2 = new std::shared_ptr<int>(new int(114514));
+    std::weak_ptr<int> _weak_a2(*_array_2);
+
+    /*
+        检测所指向的 shared_ptr 所指向的内存是否还有效（counter 不为 0）
+
+        显然，此时的 _array_1 和 *_array_2 都是有效的
+    */
+    printf("%d\n", (!_weak_a1.expired()) ? (*_weak_a1.lock()) : -1);
+    printf("%d\n", (!_weak_a2.expired()) ? (*_weak_a2.lock()) : -1);
+
+    /*手动删除 _array_2*/
+    delete _array_2;
+
+    /*
+        由于已经没有多余的指针指向了 _array_2 所指向的那个指针变量所指向的那片内存，
+        expired() 的结果必定是 nullptr。
+    */
+    printf("%d\n", (!_weak_a2.expired()) ? (*_weak_a2.lock()) : -1);
+    
+    return EXIT_SUCCESS;
+}
+
+```
+
+##### 在不延长作用域的情况下（续命）访问 `shared_ptr` 所指向的那片内存的数据
+
+如下面代码所示：
+
+```C++
+#include <memory>
+#include <iostream>
+#include <algorithm>
+
+const int ARRAY[5] = {3124, 254, 46, 476, 98};
+
+int main(int argc, char const *argv[])
+{
+    /*创建 shared_ptr<int[]> _array_1 并构建长度为 5 的数组*/
+    std::shared_ptr<int[]> _array_1(new int[5]);
+
+    /*拷贝 ARRAY 中的数据给 _array_1 内部的数组*/
+    std::copy(ARRAY, ARRAY + 5, _array_1.get());
+
+    /*创建 weak_ptr 实例并指向 _array_1*/
+    std::weak_ptr<int[]> _weak_a1(_array_1);
+
+    /*使用 lock() 成员方法拿到 _array_1 对象的地址*/
+    auto spt = _weak_a1.lock();
+    /*如果不是空对象*/
+    if (!spt)
+    {
+        printf("The memory of _array_1 pointed is invalid...\n");
+    }
+    else
+    {
+        /*输出 shared_ptr 实例所指向的那片内存的数据*/
+        printf("The _array_1 contence:\n");
+        for (int index = 0; index < 5; ++index)
+        {
+            printf("%d\t", spt[index]);
+        }
+    }
+    return EXIT_SUCCESS;
 }
 ```
 
