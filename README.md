@@ -627,7 +627,7 @@ class A
 int main(int argc, char const *argv[])
 {
     A _a;
-    if (_a.is_valid()) { sprintf(stderr, "Create This Object Failed....\n"); }
+    if (!_a.is_valid()) { sprintf(stderr, "Create This Object Failed....\n"); }
 }
 ```
 
