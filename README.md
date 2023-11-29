@@ -2,9 +2,10 @@
 
 |日期|新增问题|
 |---|---|
-|2023.11.21|1. C++异常处理机制的工作流程是什么 </br> 2. `typedef` 和 `#define` 的区别何在？ </br> 3. union 是什么，有什么用 ? </br> 4. `volatile` 关键字是做什么用的 </br> 5. 一个类中有一个 `int` 类型，一个 `char` 类型和一个虚函数，那它的大小是多少（或者说 `sizeof` 这个类的结果是多少）?|
-|2023.11.24|1. 从源代码到可执行程序，中间的过程是什么样的？</br> 2. C++ 有哪几种类型转换，它们的区别何在?|
-|2023.11.26|1.在 C++ 中，类构造函数能不能抛出异常呢？析构函数呢？</br> 2. 你刚才在回答中提到了智能指针，也不妨详细的展开来讲讲|
+|2023.11.21|1. C++异常处理机制的工作流程是什么 </br> 2. `typedef` 和 `#define` 的区别何在? </br> 3. union 是什么，有什么用 ? </br> 4. `volatile` 关键字是做什么用的 </br> 5. 一个类中有一个 `int` 类型，一个 `char` 类型和一个虚函数，那它的大小是多少（或者说 `sizeof` 这个类的结果是多少）?|
+|2023.11.24|1. 从源代码到可执行程序，中间的过程是什么样的?</br> 2. C++ 有哪几种类型转换，它们的区别何在?|
+|2023.11.26|1. 在 C++ 中，类构造函数能不能抛出异常呢?析构函数呢?</br> 2. 你刚才在回答中提到了智能指针，也不妨详细的展开来讲讲|
+|2023.11.29|1. C++ 和 C 中的 `register`，`static`，`auto` 关键字区别何在，它们在两个语言间有没有什么不同的用法? </br> 2. 右值引用是什么? std::move 是为了解决什么问题?|
 
 - [C++ 面试题回答（持续更新中）](#c-面试题回答持续更新中)
   - [请简要介绍一下 C++ 的历史及其与 C 语言的关系](#请简要介绍一下-c-的历史及其与-c-语言的关系)
@@ -29,7 +30,7 @@
     - [异常抛出 (throw)](#异常抛出-throw)
     - [异常捕获 (try)](#异常捕获-try)
     - [异常处理 (catch)](#异常处理-catch)
-  - [不错，对 C++ 的异常还算了解，那么在 C++ 中，类构造函数能不能抛出异常呢？析构函数呢？](#不错对-c-的异常还算了解那么在-c-中类构造函数能不能抛出异常呢析构函数呢)
+  - [不错，对 C++ 的异常还算了解，那么在 C++ 中，类构造函数能不能抛出异常呢?析构函数呢?](#不错对-c-的异常还算了解那么在-c-中类构造函数能不能抛出异常呢析构函数呢)
     - [构造函数抛出异常所带来的影响与正确的处理方式](#构造函数抛出异常所带来的影响与正确的处理方式)
     - [析构函数抛出异常所带来的影响与正确的处理方式](#析构函数抛出异常所带来的影响与正确的处理方式)
   - [嗯，不错的回答，你刚才在回答中提到了智能指针，也不妨详细的展开来讲讲](#嗯不错的回答你刚才在回答中提到了智能指针也不妨详细的展开来讲讲)
@@ -42,11 +43,11 @@
         - [避免 `shared_ptr` 的循环引用](#避免-shared_ptr-的循环引用)
         - [判断 `shared_ptr` 的实例是否失效](#判断-shared_ptr-的实例是否失效)
         - [在不延长作用域的情况下（续命）访问 `shared_ptr` 所指向的那片内存的数据](#在不延长作用域的情况下续命访问-shared_ptr-所指向的那片内存的数据)
-  - [`typedef` 和 `#define` 的区别何在？](#typedef-和-define-的区别何在)
+  - [`typedef` 和 `#define` 的区别何在?](#typedef-和-define-的区别何在)
   - [union 是什么，有什么用?](#union-是什么有什么用)
   - [`volatile` 关键字是做什么用的?](#volatile-关键字是做什么用的)
   - [一个类中有一个 `int` 类型，一个 `char` 类型和一个虚函数，那它的大小是多少（或者说 `sizeof` 这个类的结果是多少）?](#一个类中有一个-int-类型一个-char-类型和一个虚函数那它的大小是多少或者说-sizeof-这个类的结果是多少)
-  - [从源代码到可执行程序，中间的过程是什么样的？](#从源代码到可执行程序中间的过程是什么样的)
+  - [从源代码到可执行程序，中间的过程是什么样的?](#从源代码到可执行程序中间的过程是什么样的)
     - [预处理](#预处理)
     - [编译](#编译)
     - [汇编](#汇编)
@@ -56,6 +57,15 @@
     - [隐式类型转换 `Implicit type conversion`](#隐式类型转换-implicit-type-conversion)
     - [函数样式转换 `Functional Notation`](#函数样式转换-functional-notation)
     - [旧式 C 风格转换 `C-like conversion`](#旧式-c-风格转换-c-like-conversion)
+  - [C++ 和 C 中的 `register`，`static`，`auto` 关键字区别何在? 它们在两个语言间有没有什么不同的用法?](#c-和-c-中的-registerstaticauto-关键字区别何在它们在两个语言间有没有什么不同的用法)
+    - [`register` 关键字在 C/C++ 中的区别和用法](#register-关键字在-cc-中的区别和用法)
+    - [`static` 关键字在 C/C++ 中的区别和用法](#static-关键字在-cc-中的区别和用法)
+    - [`auto` 关键字在 C/C++ 中的区别和用法](#auto-关键字在-cc-中的区别和用法)
+      - [常规用法](#常规用法)
+      - [有关 `auto` 的新特性(C++20)](#有关-auto-的新特性)
+  - [右值引用是什么? `std::move` 是为了解决什么问题?](#右值引用是什么-stdmove-是为了解决什么问题)
+    - [概要](#概要)
+    - [移动语义构造函数 与 `std::move()`](#移动语义构造函数-与-stdmove)
 
 ## 请简要介绍一下 C++ 的历史及其与 C 语言的关系
 
@@ -587,7 +597,7 @@ int main(int argc, char const *argv[])
 }
 ```
 
-## 不错，对 C++ 的异常还算了解，那么在 C++ 中，类构造函数能不能抛出异常呢？析构函数呢？
+## 不错，对 C++ 的异常还算了解，那么在 C++ 中，类构造函数能不能抛出异常呢?析构函数呢?
 
 从理论上讲 构造函数和析构函数都能够抛出异常，但这会导致程序发生未定义行为，在实际工作中是应该要避免的，接下来我将分别说明两者：
 
@@ -1027,7 +1037,7 @@ int main(int argc, char const *argv[])
 
 所有源代码以及可执行文件请参考路径 `.\smart_pointer\`
 
-## `typedef` 和 `#define` 的区别何在？
+## `typedef` 和 `#define` 的区别何在?
 
 ||`typedef` 和 `#define` 的区别|
 |---|-------------------------------|
@@ -1145,7 +1155,7 @@ class A
 };
 ```
 
-## 从源代码到可执行程序，中间的过程是什么样的？
+## 从源代码到可执行程序，中间的过程是什么样的?
 
 从源代码到可执行程序，分为 4 个过程，分别是：`源代码` -> `预处理` -> `编译` -> `汇编` -> `链接` -> `可执行文件`，
 接下来我使用 `GCC` 编译器在 `Linux` 环境上进行演示：
@@ -1231,7 +1241,7 @@ gcc list.o symbol.o table.o main.o -o excutable_file
 
 这样就完成了从源代码到可执行文件的全过程。（所有过程文件可以查看路径 `./project`）
 
-## C++ 有哪几种类型转换，它们的区别何在？
+## C++ 有哪几种类型转换，它们的区别何在?
 
 C++ 的类型转换大致可以分为 4 种，它们分别是：
 
@@ -1291,6 +1301,231 @@ std::cout << _value << std::endl;
 
 当然，这种风格会造成很多不安全，不可预料的情况，
 因此在 C++ 中不推荐使用这种旧式风格的转换，但更鼓励用户使用 C++ 显式类型转换。
+
+### C++ 和 C 中的 `register`，`static`，`auto` 关键字区别何在，它们在两个语言间有没有什么不同的用法?
+
+#### `register` 关键字在 C/C++ 中的区别和用法
+
+`register` 关键字在 C/C++ 中区别不大，都是在 `建议` 编译器将变量放在 CPU 的寄存器之中。只是在 `C++17` 标准中，这个关键字被移除了，C++ 标准委员认为这个关键字在优化上没有什么特别大的帮助，反倒会程序造成一些困扰。因此像下面的代码在该标准中是不允许的：
+
+```C++
+/**
+ * warning: ISO C++17 does not allow 'register' storage class specifier [-Wregister]
+ *      for (register int index = 0; index < 10000000; ++index) { printf("%d", index); }
+*/
+for (register int index = 0; index < 10000000; ++index) { printf("%d", index); }
+```
+
+当然，`register` 关键字在两个语言中的用法也有几点需要注意的地方：
+
+- 被 `register` 关键字修饰的变量无法取地址，如果取了，编译器就会忽略该关键字。
+- 如果把 `register` 关键字修饰的变量修饰为外部的 `extern` 或者放在函数的参数列表中，编译器也会忽略它。
+- 如果被 `register` 修饰的变量太大（在 64 位机上不应该超过 8 字节），编译器也会忽略。
+- 指针类型的变量不应该用 `register` 修饰。
+- `static` 和 `register` 关键字混用会有冲突。
+- 用宏定义中的 `register` 并不会真正将变量分配在寄存器。
+
+```C++
+register int number = 0;
+
+int * _num_ptr = &number;               /*取了 number 的地址，忽略寄存器关键字*/
+
+extern register int number_1 = 100;     /*外部的，忽略寄存器关键字*/
+
+void function(register int _number_2);  /*作为函数的形式参数，忽略寄存器关键字*/
+
+register long double number = 1.42353145; /*在 64 位机器中 long double 类型一般占 16 字节，显然寄存器里面放不下*/
+
+register int * ptr;                     /*无效的，指针类型的变量不得放入寄存器*/
+
+static register int number_3 = 0;       /*冲突，无效的。静态/只读存储区 和 寄存器存储区 是不同的空间*/
+
+#define _REGISTER_ register
+
+_REGISTER_ int number_4 = 0;            /*无效的，即便成功替换，可变量依旧不在寄存器*/
+
+```
+
+#### `static` 关键字在 C/C++ 中的区别和用法
+
+两者基本相同，都只是将变量存储在静态/只读区而非栈区，具有内部链接属性，仅可在源文件中使用。
+只是在 C++ 中，可以把一个对象的存储类型声明为静态的，如下面代码所示：
+
+```C++
+class A {....};
+
+static A _a;        /*对象 _a 的存储类型为静态的*/
+```
+
+#### `auto` 关键字在 C/C++ 中的区别和用法
+
+##### 常规用法
+
+该关键字在 C 中代表这个变量的生命周期是自动的，即由编译器自行决定变量的去留。
+
+而在 C++ 中，`auto` 关键字被解释为自动类型，编译器会根据初始化自动推导为相应的类型。
+
+```C++
+/*在 C 中，代表自动变量，一般不在前面修饰关键字的变量都是自动的*/
+{
+    auto int number = 0;
+
+    /*到期，自动销毁 number*/
+}
+
+/*在 C++ 中，auto 关键字代表自动类型，由编译器根据初始化自行推导*/
+std::vector<int> _data = {1, 2, 3, 4};
+
+/*_data_iter 会被编译器自行推导为 std::vector<int>::iterator 类型，并且保存 _data 第一个元素的迭代器*/
+auto _data_iter = _data.begain();
+
+/*determine 会被自行推导为这个匿名函数（C++11）的对象（bool determine(int _element) 类型）*/
+auto determine = [](const int _element) { return _element == 5; };
+```
+
+##### 有关 `auto` 的新特性
+
+在 `C++20` 标准中引入了一个新关键字 `concept`（位于 `<concepts>` 头文件中），用于约束 `auto` 关键字的推导类型，防止推导结果不可控，也避免了模板的错误隐式转换。
+
+如下面的代码所示，约束一个变量为迭代器类型：
+
+```C++
+#include <iostream>
+#include <concepts>
+#include <vector>
+
+template<typename _Type>
+concept Iterator = requires(_Type _t)
+{
+    {*_t} -> std::same_as<int &>;     /*解引用为 int & 类型*/
+
+    ++_t;                            /*支持递增*/
+};
+
+int main(int argc, char const *argv[])
+{
+    std::vector<int> _data = {1, 2, 3, 4};
+
+    /*约束 _data_iter 为迭代器类型*/
+    const Iterator auto  & _data_iter = _data.begin();
+
+    return 0;
+}
+```
+
+上面的代码详见路径：`.\concept\concept.cpp`
+
+### 右值引用是什么? std::move 是为了解决什么问题?
+
+#### 概要
+
+右值引用是 `C++11` 标准中引入的新特性，可以使用型如 `type&&` 的声明表示右值引用，它用与绑定一个临时的右值，如下代码所示：
+
+```C++
+/*
+    _right_reference 是一个右值引用类型，
+    而常量 10 是一个临时的右值（这条语句结束了就销毁）
+*/
+int && _right_reference = 10;
+```
+
+`C++11` 新增该特性最主要的用意就是：避免在常规左值引用中因拷贝带来不必要的开销。由此引申出了两个新概念：
+
+- 移动语义构造函数
+- `std::move()` 标准库函数（位于 `<utility>` 头文件）
+
+#### 移动语义构造函数 与 std::move()
+
+以下代码演示了上面的两个概念：
+
+```C++
+#include <cstdio>
+#include <cstdlib>
+#include <utility>
+
+class A
+{
+    private:
+        int * _array;
+        size_t _size;
+        bool _valid;
+
+    public:
+        /*默认构建函数*/
+        A() : _array(nullptr), _size(0), _valid(false) {}
+
+        /*参数构建函数*/
+        A(size_t _s, bool _v) : _array(new int[_s]), _size(_s), _valid(_v) {}
+
+        /*
+            移动语义构建函数，传入一个右值引用类型 _a，将对象 _a 的所有权转移到这个对象中。
+        */
+        //A(A && _a) : _array(_a._array), _size(_a._size), _valid(_a._valid) { _a._array = nullptr; _a._valid = false; }
+
+        
+        /*当然也可以用标准库中的 std::move 函数去实现，结果一样，但意图更明显。*/
+        A(A && _a) : A()
+        {
+            _array = std::move(_a._array);
+            _valid = std::move(_a._valid);
+            _size = std::move(_a._size);
+
+            _a._array = nullptr;
+            _a._size = 0;
+            _a._valid = false;
+        }
+
+        size_t size() const { return _size; }
+
+        bool is_valid() const { return _valid; }
+
+        A & operator=(A && _a)
+        {
+            _array = std::move(_a._array);
+            _valid = std::move(_a._valid);
+            _size = std::move(_a._size);
+
+            _a._array = nullptr;
+            _a._size = 0;
+            _a._valid = false;
+
+            return *this;
+        }
+
+        ~A() { delete[] _array; }   
+};
+
+/*以下是测试用例*/
+#define _OBJECT_VELID(object) (object.is_valid()) ? "true" : "false"
+
+void show_state(A & _a, A & _b)
+{
+    printf("object _a._size = [%zd], valid = %s\nobject _b.size = [%zd], valid = %s\n",
+    _a.size(), _OBJECT_VELID(_a), _b.size(), _OBJECT_VELID(_b));
+}
+
+int main(int argc, char const *argv[])
+{
+    A _a(12, true), _b(21, true);
+
+    show_state(_a, _b);
+
+    /*移动 _a*/
+    _b = std::move(_a);
+
+    printf("-------------------------------\n");
+    printf("After move....\n");
+    printf("-------------------------------\n");
+
+    show_state(_a, _b);
+    
+    return EXIT_SUCCESS;
+}
+```
+
+总之，`右值引用` 和 `std::move()` 等概念就是在一定条件下，直接移动一个类，省去了拷贝所带来的开销。
+
+上面的代码详见路径 `.\right_reference\right_ref.cpp`
 
 ### Latest update: 2023.11.26
 
