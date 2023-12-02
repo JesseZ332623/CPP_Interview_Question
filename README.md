@@ -1527,7 +1527,7 @@ int main(int argc, char const *argv[])
 
 上面的代码详见路径 `.\right_reference\right_ref.cpp`
 
-### Latest update: 2023.11.26
+### Latest update: 2023.11.29
 
 #### Author: [JesseZ332623](https://github.com/JesseZ332623)
 
